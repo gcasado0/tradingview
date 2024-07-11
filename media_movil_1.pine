@@ -1,7 +1,7 @@
 //@version=5
 indicator("Medias moviles v1", overlay=true)
 
-// Verificar que estamos en un gráfico diario
+// Verificar que estamos en un gráfico diario o semanal
 isDaily = timeframe.period == "D"
 isWeekly = timeframe.period == "W"
 
@@ -9,10 +9,18 @@ isWeekly = timeframe.period == "W"
 updateLabel(ma, txt, y_loc, col) =>
     var label la = na
     label.delete(la)
-    la := label.new(x=bar_index, y=ma, text=txt, color=col, style=label.style_label_left, textcolor=color.white)
+    la := label.new(
+         x=bar_index+5,
+         y=ma,
+         text=txt,
+         color=color.new(col, 100),  // Color totalmente transparente
+         style=label.style_none,     // Sin estilo de fondo
+         textcolor=col,              // Color del texto igual al de la línea
+         size=size.tiny              // Tamaño pequeño
+         )
 
+// Calcular medias para visión diaria
 
-// Calcular medias para vision diaria
 
 wma_4 = isDaily ? ta.wma(close, 4) : na
 wma_21 = isDaily ? ta.wma(close, 21) : na
@@ -20,37 +28,42 @@ sma_30 = isDaily ? ta.sma(close, 30) : na
 ema_150 = isDaily ? ta.ema(close, 150) : na
 ema_200 = isDaily ? ta.ema(close, 200) : na
 
-// Calcular medias para vision semanal
-wma_10 = isWeekly ? ta.wma(close, 10) : na
-wma_30 = isWeekly ? ta.wma(close, 30) : na
-wma_50 = isWeekly ? ta.wma(close, 50) : na
-sma_200 = isWeekly ? ta.wma(close, 200) : na
-
-// Plotear las medias diarias
 plot(wma_4, color=color.gray, title="WMA 4", linewidth=2)
 plot(wma_21, color=color.blue, title="WMA 21", linewidth=2)
 plot(sma_30, color=color.orange, title="SMA 30", linewidth=2)
 plot(ema_150, color=color.red, title="EMA 150", linewidth=2)
 plot(ema_200, color=color.green, title="EMA 200", linewidth=2)
 
-// Plotear las medias semanales
+updateLabel(wma_4, "WMA 4", wma_4, color.gray)
+updateLabel(wma_21, "WMA 21", wma_21, color.blue)
+updateLabel(sma_30, "SMA 30", sma_30, color.orange)
+updateLabel(ema_150, "EMA 150", ema_150, color.red)
+updateLabel(ema_200, "EMA 200", ema_200, color.green)
+
+// Señales de cruce para visión diaria
+crossUp = ta.crossover(wma_4, wma_21)
+crossDown = ta.crossunder(wma_4, wma_21)
+plotshape(series=crossUp, location=location.belowbar, color=color.green, style=shape.labelup, text="C")
+plotshape(series=crossDown, location=location.abovebar, color=color.red, style=shape.labeldown, text="V")
+
+// Calcular medias para visión semanal
+wma_10 = isWeekly ? ta.wma(close, 10) : na
+wma_30 = isWeekly ? ta.wma(close, 30) : na
+wma_50 = isWeekly ? ta.wma(close, 50) : na
+sma_200 = isWeekly ? ta.wma(close, 200) : na
+
 plot(wma_10, color=color.blue, title="WMA 10", linewidth=2)
 plot(wma_30, color=color.orange, title="WMA 30", linewidth=2)
 plot(wma_50, color=color.red, title="WMA 50", linewidth=2)
 plot(sma_200, color=color.green, title="SMA 200", linewidth=2)
 
-// Señal de cruce al alza
-crossUp = ta.crossover(wma_4, wma_21)
-plotshape(series=crossUp, location=location.belowbar, color=color.green, style=shape.labelup, text="C")
+updateLabel(wma_10, "WMA 10", wma_10, color.blue)
+updateLabel(wma_30, "WMA 30", wma_30, color.orange)
+updateLabel(wma_50, "WMA 50", wma_50, color.red)
+updateLabel(sma_200, "SMA 200", sma_200, color.green)
 
-// Señal de cruce a la baja
-crossDown = ta.crossunder(wma_4, wma_21)
-plotshape(series=crossDown, location=location.abovebar, color=color.red, style=shape.labeldown, text="V")
-
-// Señal de cruce al alza
+// Señales de cruce para visión semanal
 crossUpS = ta.crossover(wma_10, wma_30)
-plotshape(series=crossUpS, location=location.belowbar, color=color.green, style=shape.labelup, text="C")
-
-// Señal de cruce a la baja
 crossDownS = ta.crossunder(wma_10, wma_30)
+plotshape(series=crossUpS, location=location.belowbar, color=color.green, style=shape.labelup, text="C")
 plotshape(series=crossDownS, location=location.abovebar, color=color.red, style=shape.labeldown, text="V")
