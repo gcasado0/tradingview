@@ -1,0 +1,56 @@
+//@version=5
+indicator("Medias moviles v1", overlay=true)
+
+// Verificar que estamos en un gráfico diario
+isDaily = timeframe.period == "D"
+isWeekly = timeframe.period == "W"
+
+// Función para crear y actualizar etiquetas
+updateLabel(ma, txt, y_loc, col) =>
+    var label la = na
+    label.delete(la)
+    la := label.new(x=bar_index, y=ma, text=txt, color=col, style=label.style_label_left, textcolor=color.white)
+
+
+// Calcular medias para vision diaria
+
+wma_4 = isDaily ? ta.wma(close, 4) : na
+wma_21 = isDaily ? ta.wma(close, 21) : na
+sma_30 = isDaily ? ta.sma(close, 30) : na
+ema_150 = isDaily ? ta.ema(close, 150) : na
+ema_200 = isDaily ? ta.ema(close, 200) : na
+
+// Calcular medias para vision semanal
+wma_10 = isWeekly ? ta.wma(close, 10) : na
+wma_30 = isWeekly ? ta.wma(close, 30) : na
+wma_50 = isWeekly ? ta.wma(close, 50) : na
+sma_200 = isWeekly ? ta.wma(close, 200) : na
+
+// Plotear las medias diarias
+plot(wma_4, color=color.gray, title="WMA 4", linewidth=2)
+plot(wma_21, color=color.blue, title="WMA 21", linewidth=2)
+plot(sma_30, color=color.orange, title="SMA 30", linewidth=2)
+plot(ema_150, color=color.red, title="EMA 150", linewidth=2)
+plot(ema_200, color=color.green, title="EMA 200", linewidth=2)
+
+// Plotear las medias semanales
+plot(wma_10, color=color.blue, title="WMA 10", linewidth=2)
+plot(wma_30, color=color.orange, title="WMA 30", linewidth=2)
+plot(wma_50, color=color.red, title="WMA 50", linewidth=2)
+plot(sma_200, color=color.green, title="SMA 200", linewidth=2)
+
+// Señal de cruce al alza
+crossUp = ta.crossover(wma_4, wma_21)
+plotshape(series=crossUp, location=location.belowbar, color=color.green, style=shape.labelup, text="C")
+
+// Señal de cruce a la baja
+crossDown = ta.crossunder(wma_4, wma_21)
+plotshape(series=crossDown, location=location.abovebar, color=color.red, style=shape.labeldown, text="V")
+
+// Señal de cruce al alza
+crossUpS = ta.crossover(wma_10, wma_30)
+plotshape(series=crossUpS, location=location.belowbar, color=color.green, style=shape.labelup, text="C")
+
+// Señal de cruce a la baja
+crossDownS = ta.crossunder(wma_10, wma_30)
+plotshape(series=crossDownS, location=location.abovebar, color=color.red, style=shape.labeldown, text="V")
