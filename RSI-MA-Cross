@@ -1,0 +1,43 @@
+//@version=5
+indicator("RSI con Media Móvil y Señales de Cruce", shorttitle="RSI-MA Cross")
+
+// Parámetros configurables
+rsiLength = input(14, "Longitud RSI")
+maLength = input(9, "Longitud Media Móvil")
+overbought = input(70, "Nivel Sobrecompra")
+oversold = input(30, "Nivel Sobreventa")
+
+// Colores configurables
+bullColor = input.color(color.green, "Color Señal Alcista")
+bearColor = input.color(color.red, "Color Señal Bajista")
+
+// Cálculo del RSI y su media móvil
+rsiValue = ta.rsi(close, rsiLength)
+rsiMA = ta.sma(rsiValue, maLength)
+
+// Detectar cruces
+crossOver = ta.crossover(rsiValue, rsiMA)
+crossUnder = ta.crossunder(rsiValue, rsiMA)
+
+// Plotear el RSI y la media móvil
+plot(rsiValue, "RSI", color=color.blue)
+plot(rsiMA, "RSI MA", color=color.red)
+
+// Plotear líneas de sobrecompra/sobreventa
+hline(overbought, "Sobrecompra", color=color.red, linestyle=hline.style_dashed)
+hline(oversold, "Sobreventa", color=color.green, linestyle=hline.style_dashed)
+hline(50, "Medio", color=color.gray, linestyle=hline.style_dashed)
+
+// Plotear señales de cruce con triángulos
+plotshape(crossOver, "Cruce Alcista", style=shape.triangleup, location=location.bottom, color=bullColor, size=size.small)
+plotshape(crossUnder, "Cruce Bajista", style=shape.triangledown, location=location.top, color=bearColor, size=size.small)
+
+// Plotear líneas verticales en los cruces
+if crossOver
+    line.new(x1=bar_index, y1=0, x2=bar_index, y2=100, color=bullColor, style=line.style_dashed)
+if crossUnder
+    line.new(x1=bar_index, y1=0, x2=bar_index, y2=100, color=bearColor, style=line.style_dashed)
+
+// Alertas
+alertcondition(crossOver, "Cruce Alcista RSI-MA", "El RSI ha cruzado por encima de su media móvil")
+alertcondition(crossUnder, "Cruce Bajista RSI-MA", "El RSI ha cruzado por debajo de su media móvil")
