@@ -1,0 +1,88 @@
+//@version=4
+study(title="Koncorde/Relative Strength Index/Moving Average Convergence Divergence", shorttitle="Koncorde/RSI/MACD")
+
+showkoncorde = input(true, title='KONCORDE VISIBLE')
+showrsi = input(true, title='RSI VISIBLE')
+showmacd = input(true, title='MACD VISIBLE')
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+deltaKon = 250
+calc_mfi(length) => rsi(sum(volume * (change(hlc3) <= 0 ? 0 : hlc3), length), sum(volume * (change(hlc3) >= 0 ? 0 : hlc3), length))
+tprice=ohlc4
+lengthEMA = 255
+m=15
+pvim = ema(pvi, m)
+pvimax = highest(pvim, 90)
+pvimin = lowest(pvim, 90)
+oscp = (pvi - pvim) * 100/ (pvimax - pvimin)
+nvim = ema(nvi, m)
+nvimax = highest(nvim, 90)
+nvimin = lowest(nvim, 90)
+azul = (nvi - nvim) * 100 / (nvimax - nvimin)
+xmf = calc_mfi(14)
+mult=2.0
+basis = sma(tprice, 25)
+dev = mult * stdev(tprice, 25)
+upper = basis + dev
+lower = basis - dev
+OB1 = (upper + lower) / 2.0
+OB2 = upper - lower
+BollOsc = ((tprice - OB1) / OB2 ) * 100
+xrsi = rsi(tprice, 14)
+calc_stoch(src, length,smoothFastD ) => sma(100 * (src - lowest(low, length)) / (highest(high, length) - lowest(low, length)), smoothFastD)
+stoc = calc_stoch(tprice, 21, 3)
+marron = (xrsi + xmf + BollOsc + (stoc / 3))/2
+verde = marron + oscp
+media = ema(marron,m)
+
+vl=plot(iff(showkoncorde,verde+deltaKon,na),color=#00ff00,style=plot.style_area,histbase=deltaKon, linewidth=2,title="Movimiento Minorista")
+ml=plot(iff(showkoncorde,marron+deltaKon,na), color=#ffb974,style=plot.style_area,histbase=deltaKon, linewidth=2,  title="Montaña")
+al=plot(iff(showkoncorde,azul+deltaKon,na), color=#00fbff,style=plot.style_area,histbase=deltaKon, linewidth=2,  title="Movimiento Institucional")
+plot(iff(showkoncorde,marron+deltaKon,na), color=color.rgb(116, 56, 0), linewidth=2, title="Linea Marron")
+plot(iff(showkoncorde,verde+deltaKon,na), color=#008c00, linewidth=2, title="Linea Verde")
+plot(iff(showkoncorde,azul+deltaKon,na), color=#0095ff, linewidth=2, title="Linea Azul")
+plot(iff(showkoncorde,media+deltaKon,na), color=color.rgb(255, 0, 0), linewidth=2, title="Media Móvil")
+plot(iff(showkoncorde,deltaKon,na), color=color.white, linewidth=3, title="Cero Koncorde")
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+deltaMacd = -350
+multMacd = 5
+fast_length = input(title="Longitud Media Rápida del MACD", type=input.integer, defval=12)
+slow_length = input(title="Longitud Media Lenta del MACD", type=input.integer, defval=26)
+src = close
+signal_length = input(title="Longitud Suavizado MACD", type=input.integer, minval = 1, maxval = 50, defval = 9)
+sma_source = false
+sma_signal = false
+
+col_grow_above = #26A69A
+col_fall_above = #B2DFDB
+col_fall_below = #EF5350
+col_grow_below = #FFCDD2
+col_macd = #0094ff
+col_signal = #ff6a00
+
+fast_ma = sma_source ? sma(src, fast_length) : ema(src, fast_length)
+slow_ma = sma_source ? sma(src, slow_length) : ema(src, slow_length)
+macd = (fast_ma - slow_ma) / slow_ma * 1000 * multMacd
+signal = sma_signal ? sma(macd, signal_length) : ema(macd, signal_length)
+hist = macd - signal
+
+plot(iff(showmacd,hist ? hist + deltaMacd : na,na), title="Histograma MACD", style=plot.style_columns, color=(hist>=0 ? (hist[1] < hist ? col_grow_above : col_fall_above) : (hist[1] < hist ? col_grow_below : col_fall_below) ),histbase=deltaMacd )
+plot(iff(showmacd,macd ? macd + deltaMacd: na,na), title="MACD", color=col_macd)
+plot(iff(showmacd,signal ? signal + deltaMacd: na,na), title="Señal del MACD", color=col_signal)
+plot(iff(showmacd,deltaMacd,na), color=color.white, linewidth=3, title="Cero MACD")
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+deltaRSI = 0
+multip = 5
+
+hline(iff(showrsi,0+deltaRSI,na), title="Línea Cero", color=color.rgb(255, 255, 255), linestyle=hline.style_dashed,linewidth=1)
+hline(iff(showrsi,-20*multip+deltaRSI,na), title="Línea Sobreventa", color=color.green, linestyle=hline.style_solid)
+hline(iff(showrsi,20*multip+deltaRSI,na), color=color.red, title="Línea Sobrecompra", linestyle=hline.style_solid)
+lengthRSI = input(14, minval=1, title="Longitud del RSI")
+RSIMain = (rsi(close, lengthRSI) - 50)
+rsiPlot = plot(iff(showrsi,RSIMain*multip+deltaRSI,na), title="RSI", color=color.rgb(120, 12, 139), linewidth = 2)
+        
